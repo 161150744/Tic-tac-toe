@@ -1,13 +1,16 @@
-from Grafo import *
+from Tree import *
 import sys
 
-def getArg():
+def getArgs():
     listArgs = []
     for param in sys.argv:
         listArgs.append(param)
+    return listArgs
 
 def main():
-    pass
+    args = getArgs()
+    game = Node(args[1], args[2], args[3], args[4], args[5:], 0)
+    print(game.result)
 
 if __name__ == '__main__':
     main()
