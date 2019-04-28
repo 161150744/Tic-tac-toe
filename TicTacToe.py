@@ -6,23 +6,46 @@
 # a arvore gerada tem um limite de nivel igual a 16
 
 
-from Tree import Tree
+from Node import Node
 import sys
 
-def getArgs():#funcao que pega os argumentos do terminal
-    listArgs = []#armazena a lista de argumentos
-    for param in sys.argv:
-        listArgs.append(param)
-    return listArgs#retorna a lista de argumentos
+def show(state, m, n):
+    for j in range(n):
+        print('\t{}'.format(j), end='')
+    print()
+    print()
+    print()
+    for i in range(m):
+        print(i, end='')
+        for j in range(n):
+            if(state[i*n+j] == '-1'):
+                print('\to', end='')
+            elif(state[i*n+j] == '1'):
+                print('\tx', end='')
+            elif(state[i*n+j] == '0'):
+                print('\t+', end='')
+        print()
 
-def main():
-    args = getArgs()
-    game = Tree(args[1], args[2], args[3], args[4], args[5:])#cria o objeto tree com os parametros passados (m, n, j, k, estado)
-    l = game.play()#novo estado gerado pelo algoritmo
-    g = args[5:]#estado antigo
-    for i in range(len(l)):
-        if(l[i] != g[i]):#acha a posição diferente
-            print ("{1} {0}".format(i%int(args[2]),int((i - i%int(args[2]))/int(args[1]))))
+def main(args):
+    l=0
+    c=0
+    state=args[4:]
+    if(int(args[2])==-1):
+        while(l>=0 and c>=0):
+            show(state, int(args[0]), int(args[1]))
+            l=int(input('\nnumero da linha '))
+            c=int(input('\nnumero da coluna '))
+            state[l*int(args[1])+c]='1'
+            game = Node(int(args[2]), state, 1, int(args[2]), 0, int(args[0]), int(args[1]), int(args[3]))
+            state=game.make_the_move()
+    else:
+        while(l>=0 and c>=0):
+            game = Node(int(args[2]), state, 1, int(args[2]), 0, int(args[0]), int(args[1]), int(args[3]))
+            state=game.make_the_move()
+            show(state, int(args[0]), int(args[1]))
+            l=int(input('\nnumero da linha '))
+            c=int(input('\nnumero da coluna '))
+            state[l*int(args[1])+c]='-1'
 
 if __name__ == '__main__':
-    main()
+    main(sys.argv[1:])

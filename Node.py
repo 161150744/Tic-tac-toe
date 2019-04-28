@@ -1,270 +1,147 @@
 class Node:
-    def __init__(self, m, n, j, k, state, cost, father):
-        self.cost = int(cost)#nivel na arvore
-        self.state = state#esatdo
-        self.result = self.resultTest(int(m), int(n), int(j), int(k))# testa se o estado é final e retorna um resultado
-        self.father = father#pai
-        self.sons = []#lista de filhos
-        self.MinMax()#decide se é MIN ou MAX
-        self.flag = True#flag de poda
-
+    def __init__(self, initJ, state, condition, j, level, m, n, k):
+        self.state=state
+        # print(state)
+        self.condition=condition
+        self.children=[]
+        self.j=j
+        self.level=level
+        self.score=self.test_score(initJ, m, n, k)
+        if(self.score==None):
+            self.play(initJ, m, n, k)
     def __str__(self):
-        return self.state#retorna um estado
-    
-    def addSon(self, m, n, j, k, state):#adiciona um filho na lista de filhos
-        self.sons.append(Node(m, n, j, k, state, self.cost+1, self))
+        return str(self.state)
+    def empty(self):
+        _empty=[]
+        for i in range(len(self.state)):
+            if(self.state[i]=='0'):
+                _empty.append(i)
+        return _empty
+    def play(self, initJ, m, n, k):
+        _empty=self.empty()
+        for i in _empty:
+            newState=self.state[:]
+            newState[i]=str(self.j)
+            self.children.append(Node(initJ, newState, -self.condition, -self.j, self.level+1, m, n, k))
+    def diagonalNormal(self, jogador, inicialI, inicialJ, m, n, k): # Verifica vitoria na diagonal
+        cont = 0
 
-    def vertical(self, m, n, gamer, k):#função que verifica se alguem ganhou na vertical
-        x = 0#numro de x's
-        o = 0#numero de o's
-        winner = 0#quem ganhou
-        zeros = 0#numero de zeros
-        for j in range(n):#percorre o j no tamanho maximo da linha
-            x = 0#volta o numero de x's para 0
-            o = 0#volta o numero de o's para 0
-            if winner == 0:#se ainda não tiver um vencedor
-                for i in range(m):#percorre o i no tamanho maximo da coluna
-                    if(self.state[i*n+j] == '0'):#se a posição atual for um 0
-                        zeros += 1#aumenta o numero de zeros
-                        x = 0#zera o numero de x's em sequencia
-                        o = 0#zera o numero de o's em sequencia
-                    elif(self.state[i*n+j] == '1'):#se a posição atual for um 1
-                        x += 1#aumenta o numero de x's em sequencia
-                        o = 0#zera o numero de o's em sequencia
-                    elif(self.state[i*n+j] == '2'):#se a posição atual for um 2
-                        x = 0#zera o numero de x's em sequencia
-                        o += 1#aumenta o numero de o's em sequencia
-                    if(x == k):#se o numero de x's em sequencia for igual a sequencia
-                        winner = 1#o ganhador é o numero 1
-                        break#para
-                    elif(o == k):#se o numero de o's em sequencia for igual a sequencia
-                        winner = 2#o ganhador é o 2
-                        break#para
-        if winner == 0 and zeros > 0:#se niinguem ganhou, porem ainda existem zeros, retorna None
-            return None
-        elif winner == 0 and zeros == 0:#se ninguem ganhou, porem não existe mais zeros, retorna 0
-            return 0
-        elif int(winner) == gamer:#se o jogador ganhou, retorna +1
-            return 1
-        else:#se o jogador não ganhou, retorna -1
-            return -1
+        for j in range(n):
+            if (inicialI + j) < m and (j+inicialJ) < n:
+                if self.state[((inicialI+j)*n)+j+inicialJ] == str(jogador):
+                    cont += 1
+                else:
+                    cont = 0
+                if cont == k:
+                    return True
+            else:
+                break
 
-    def horizontal(self, m, n, gamer, k):#mesma coisa da funcao anterior, porem percorrendo a coluna primeiro e depois a linha
-        x = 0
-        o = 0
-        winner = 0
-        zeros = 0
-        for i in range(m):
-            x = 0
-            o = 0
-            if winner == 0:
-                for j in range(n):
-                    if(self.state[i*n+j] == '0'):
-                        zeros += 1
-                        x = 0
-                        o = 0
-                    elif(self.state[i*n+j] == '1'):
-                        x += 1
-                        o = 0
-                    elif(self.state[i*n+j] == '2'):
-                        x = 0
-                        o += 1
-                    if(x == k):
-                        winner = 1
-                        break
-                    elif(o == k):
-                        winner = 2
-                        break
-        if winner == 0 and zeros > 0:
-            return None
-        elif winner == 0 and zeros == 0:
-            return 0
-        elif int(winner) == gamer:
-            return 1
-        else:
-            return -1
-
-    def diagonal1(self, m, n, gamer, k):#testa a diagonal direita, baixo
-        x = 0
-        o = 0
-        winner = 0
-        zeros = 0
-        for g in range(m):#guarda a posição na coluna em que o teste atual vai começar para testar as dioganais acima da diagonal princiapal da matriz transposta
-            i = g
-            j = 0
-            x = 0
-            o = 0
-            while(i < m and j < n):#aumenta i e j sem que eles passem do limite da matriz
-                if winner == 0:
-                    if(self.state[i*n+j] == '0'):#conta o numero de zeros
-                        zeros += 1
-                        x = 0
-                        o = 0
-                    elif(self.state[i*n+j] == '1'):#conta o numero de x's
-                        x += 1
-                        o = 0
-                    elif(self.state[i*n+j] == '2'):#conta o numero de o's
-                        x = 0
-                        o += 1
-                    if(x == k):#testa se o x venceu
-                        winner = 1
-                        break
-                    elif(o == k):#testa se o o venceu
-                        winner = 2
-                        break
-                i += 1
-                j += 1
-        for g in range(n):#termina os testes, abaixo da dioganal principal da matriz transposta
-            i = 0
-            j = g
-            x = 0
-            o = 0
-            while(i < m and j < n):
-                if winner == 0:
-                    if(self.state[i*n+j] == '0'):
-                        zeros += 1
-                        x = 0
-                        o = 0
-                    elif(self.state[i*n+j] == '1'):
-                        x += 1
-                        o = 0
-                    elif(self.state[i*n+j] == '2'):
-                        x = 0
-                        o += 1
-                    if(x == k):
-                        winner = 1
-                        break
-                    elif(o == k):
-                        winner = 2
-                        break
-                i += 1
-                j += 1
-        if winner == 0 and zeros > 0:
-            return None
-        elif winner == 0 and zeros == 0:
-            return 0
-        elif int(winner) == gamer:
-            return 1
-        else:
-            return -1
-
-    def diagonal2(self, m, n, gamer, k):#testa a diagonal direita, cima
-        x = 0
-        o = 0
-        winner = 0
-        zeros = 0
-        for g in range(m):#guarda a posição na coluna em que o teste atual vai começar para testar as dioganais acima da diagonal princiapal da matriz transposta
-            i = g
-            j = 0
-            x = 0
-            o = 0
-            while(i >= 0 and j < n):#incrementa o j e decrementa o i sem passar dos limites da matriz
-                if winner == 0:
-                    if(self.state[i*n+j] == '0'):
-                        zeros += 1
-                        x = 0
-                        o = 0
-                    elif(self.state[i*n+j] == '1'):
-                        x += 1
-                        o = 0
-                    elif(self.state[i*n+j] == '2'):
-                        x = 0
-                        o += 1
-                    if(x == k):
-                        winner = 1
-                        break
-                    elif(o == k):
-                        winner = 2
-                        break
-                i -= 1
-                j += 1
-        for g in range(1, n):#termina os testes, abaixo da dioganal principal da matriz transposta
-            i = m-1
-            j = g
-            x = 0
-            o = 0
-            while(i >= 0 and j < n):
-                if winner == 0:
-                    if(self.state[i*n+j] == '0'):
-                        zeros += 1
-                        x = 0
-                        o = 0
-                    elif(self.state[i*n+j] == '1'):
-                        x += 1
-                        o = 0
-                    elif(self.state[i*n+j] == '2'):
-                        x = 0
-                        o += 1
-                    if(x == k):
-                        winner = 1
-                        break
-                    elif(o == k):
-                        winner = 2
-                        break
-                i -= 1
-                j += 1
-        if winner == 0 and zeros > 0:
-            return None
-        elif winner == 0 and zeros == 0:
-            return 0
-        elif int(winner) == gamer:
-            return 1
-        else:
-            return -1
-
-    def resultTest(self, m, n, j, k):#testa o resultado (se ganhou, perdeu ou deu empate)
-        #{-1 : defeat, 0 : draw, 1 : victory, None : nothing}
-        possibilities = [self.vertical, self.horizontal, self.diagonal1, self.diagonal2]#lista de possibilidades para testar
-        for p in possibilities:#percorre a lista de possibilidades
-            if p(m, n, j, k) != None:#se perdeu, ganhou ou empatou, retorna o resultado
-                return p(m, n, j, k)
-        return None#se não, retorna none
-
-    def max(self):#atualiza o valor do pai
-        father = self.father
-        Max = -1
-        for i in father.sons:#percorre na lista de filhos do pai e procura o valor maximo para atualizar
-            if i.result != None and i.result > Max:
-                Max = i.result
-        if(father.result == None):#se atualizar o valor, retorna verdadeiro
-            father.result = Max
-            return True
-        if(father.result < Max):
-            father.result = Max
-            return True
-        return False#se não atualizar retorna falso
-
-    def min(self):#faz o mesmo que a função de cima, porem para o minimo
-        father = self.father
-        Min = 1
-        for i in father.sons:
-            if i.result != None and i.result < Min:
-                Min = i.result
-        if(father.result == None):
-            father.result = Min
-            return True
-        elif(father.result > Min):
-            father.result = Min
-            return True
         return False
 
-    def MinMax(self):#decide se é MIN ou MAX, e se o valor do pai for alterado, tenta atualizar o valor do pai do pai
-        flag = False
-        if self.result != None:
-            if self.father != None:
-                level = self.cost % 2
-                if(level == 0):
-                    flag = self.min()
+    def diagonalInversa(self, jogador, inicialI, inicialJ, m, n, k): # Verifica vitoria na diagonal ao contrario
+        cont = 0
+        while inicialI < m and inicialJ >= 0:
+            if self.state[(inicialI*n)+inicialJ] == str(jogador):
+                cont += 1
+            else:
+                cont = 0
+            if cont == k:
+                return True
+
+            inicialI += 1
+            inicialJ -= 1
+
+        return False
+
+    def winDiagonal(self, jogador, m, n, k): # Verifica vitoria em dois tipos de diagonais
+        for i in range(n): # Oscila a posicao inicial na Linha
+            if self.diagonalNormal(jogador, 0, i, m, n, k):
+                return True
+
+        for i in range(m): # Oscila a posicao inicial na Coluna
+            if self.diagonalNormal(jogador, i, 0, m, n, k):
+                return True
+
+        for i in range(m): # Oscila a posicao inicial na Linha e na Coluna
+            for j in range(n-1, -1, -1):
+                if self.diagonalInversa(jogador, i, j, m, n, k):
+                    return True
+
+        return False
+
+    def verificaEmpate(self): # Verifica empate
+        if '0' in self.state: # Caso possua algum zero nao foi empate
+            return False
+
+        return True # Por conta da posicao onde eh chamada pode apenas retornar Ture caso o self.state nao possua nenhum zero
+
+    def winHorizontal(self, jogador, m, n, k): # Percorre e procura vitoria na horizontal do self.state
+        for i in range(m):
+            cont = 0
+            for j in range(n):
+                if self.state[(i*n)+j] == str(jogador):
+                    cont += 1
                 else:
-                    flag = self.max()
-                if flag:
-                    self.father.MinMax()
+                    cont = 0
+                if cont == k:
+                    return True
 
-    def setFather(self):#atualiza o resultado do pai
-        self.father.result = self.result
+        return False
 
-    def pruning(self, node):#poda
-        if self != node:
-            for i in self.father.sons:#percorre os filhos do pai e faz a flag deles valer False
-                i.flag = False
-            self.father.pruning(node)
+    def winVertical(self, jogador, m, n, k): # Percorre e procura vitoria na vertical do self.state
+        for i in range(n):
+            cont = 0
+            for j in range(m):
+                if self.state[(j*n)+i] == str(jogador):
+                    cont += 1
+                else:
+                    cont = 0
+                if cont == k:
+                    return True
+
+        return False
+
+    def test_score(self, initJ, m, n, k): # determina chamando outras funcoes qual o valor de um self.state
+        j2 = 0
+
+        if initJ == 1:
+            j2 = -1
+        else:
+            j2 = 1
+
+        if self.winDiagonal(initJ, m, n, k) or self.winHorizontal(initJ, m, n, k) or self.winVertical(initJ, m, n, k):
+            return 1 # Jogador do primeiro movimento ganhou
+        elif self.winDiagonal(j2, m, n, k) or self.winHorizontal(j2, m, n, k) or self.winVertical(j2, m, n, k):
+            return -1 # Jogador do primeiro movimento perdeu
+        elif self.verificaEmpate():
+            return 0 # Empate entre os jogadores
+        else:
+            return None # Ainda existem movimentos possiveis
+    def minimax(self):
+        if(self.score!=None):
+            return self.score
+        else:
+            scores=[]
+            for i in self.children:
+                scores.append(i.minimax())
+                if(scores[-1]==1 and self.condition==1):
+                    self.score=1
+                    return self.score
+                elif(scores[-1]==-1 and self.condition==-1):
+                    self.score=-1
+                    return self.score
+            if(self.condition==1):
+                self.score=max(scores)
+                return max(scores)
+            else:
+                self.score=min(scores)
+                return min(scores)
+
+    def make_the_move(self):
+        self.score=self.minimax()
+        print(self.score)
+        # print(self.score)
+        for i in self.children:
+            if(i.score == self.score):
+                return i.state
